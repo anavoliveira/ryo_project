@@ -25,6 +25,7 @@ gh auth login
 ```
  
 ## Organização do repositorio
+```
 ├─ ryo/
 │   └─ ryo/
 │       └── src/         
@@ -45,7 +46,7 @@ gh auth login
 ├── README.md
 ├── config.yml
 └── .gitignore
-
+```
 ## Como utilizar
 ### Estrutura do `config.yml`
 
