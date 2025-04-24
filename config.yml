@@ -1,0 +1,36 @@
+tasks:
+  example-task:
+    repository: minha_lib\workflow
+    steps:
+      - action: commit_file
+        auto_commit: 'true'
+        commit_msg: "Segundo repositorio"
+        repository: minha_lib\teste3\workflow
+
+      - action: commit_file
+        auto_commit: 'true'
+
+      - action: workflow_monitor
+        workflow_name: "1 - FEAT - Build and PR"
+        show_workflow: 'true'
+
+      - action: approve_pull_request
+        source_branch: feature-teste
+        target_branch: develop
+
+      - action: workflow_monitor
+        workflow_name: "2 - DEV - Build and Deploy"
+        show_workflow: 'true'
+
+      - action: approve_pull_request
+        source_branch: develop
+        target_branch: release/*
+
+      - action: workflow_monitor
+        workflow_name: "3 - HOM - Homologacao"
+        show_workflow: 'true'
+
+      - action: approve_pull_request
+        source_branch: release/*
+        target_branch: main
+

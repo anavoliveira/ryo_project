@@ -1,0 +1,20 @@
+
+tasks: map(include('task'), required=True)
+
+---
+task:
+  repository: str(required=True)
+  steps: list(include('step'), required=True)
+
+---
+step: include('step_definition')
+
+---
+step_definition:
+  action: str(required=True)
+  file_path: str(required=False)
+  commit_msg: str(required=False)
+  workflow_name: str(required=False)
+  show_workflow: str(required=False)
+  source_branch: str(required=False)
+  target_branch: str(required=False)
