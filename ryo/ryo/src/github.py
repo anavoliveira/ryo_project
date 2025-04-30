@@ -4,22 +4,15 @@ import time
 from pathlib import Path
 import shutil
 import yaml
+import sys
 class GitHubRepo:
     def __init__(self, repo_path,  base_path):
         self.repo_path = os.path.abspath(os.path.join(base_path, repo_path))
         self.repo_name = repo_path.split("/")[-1]
         self.base_path = base_path
-        # self.workflows_availables = workflows_availables
-
-        # print(f"----------------- GitHub Repo -----------------")
-        # print(f"Repositório: {self.repo_name}")
-        # print(f"Base Path: {self.base_path}")
-        # print(f"Caminho: {self.repo_path}")
-        # print(f"Workflows disponíveis: {self.workflows_availables}")
 
     def cd_repo_path(self):
         try:
-            # print(f"Alterando diretório para: {self.repo_path}")
             os.chdir(self.repo_path)
             return True
         except FileNotFoundError:
@@ -35,14 +28,47 @@ class GitHubRepo:
             print(f"Erro ao executar comando: {command}\n{e}")
             return None
 
+    def checkout_or_create_branch(self, branch):
+        if not branch:
+            return
+
+        result = subprocess.run(
+            ["git", "branch", "--list", branch],
+            capture_output=True,
+            text=True
+        )
+
+        if result.stdout.strip():
+            print(f"A branch '{branch}' já existe. Fazendo checkout...")
+            subprocess.run(["git", "checkout", branch], check=True)
+        else:
+            print(f"A branch '{branch}' não existe. ")
+            sys.exit(1)
+            # subprocess.run(["git", "checkout", "-b", branch], check=True)
+            # subprocess.run("git fetch")
+            # subprocess.run(f"git push -u origin {branch}")
+
     
-    def commit(self, commit_file, commit_message, auto_commit):
+    def get_current_branch(self):
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True
+        )
+        return result.stdout.strip()
+    
+    def commit(self, commit_file, commit_message, auto_commit, branch):
         """Realiza um commit no arquivo README.md para execução dos workflows."""
         print(f"\n Processando repositório: {self.repo_name}")
         
         print(f"\n------------------------ Run Commit -------------------------")
 
         self.cd_repo_path()
+
+        print(f"\n------------------- Verificando a branch --------------------")
+        self.checkout_or_create_branch(branch)
+        branch = self.get_current_branch()
+        print(f"A branch atual é: {branch}")
 
         print("------------------- Realizando o git pull -------------------")
         
@@ -66,7 +92,7 @@ class GitHubRepo:
         self.run_command(f'git commit -m "{commit_message}"')
 
         print("--------------------- Realizando o push ---------------------")
-        self.run_command("git push")
+        self.run_command("git push -u")
 
         print(f"Repositorio alterado e com a mensagem: '{commit_message}'.")
         os.chdir(self.base_path)
@@ -115,6 +141,7 @@ class GitHubRepo:
         else:
             print("------------ Nenhum PR encontrado foi encontrado ------------")
             return
+        os.chdir(self.base_path)
         
     def workflow_monitor(self, workflow_name, show_workflow):
         """Monitora a execução de um workflow."""
@@ -141,13 +168,13 @@ class GitHubRepo:
                     if show_workflow.lower() == "true":
                         print(f"Exibindo detalhes do workflow: {workflow_id}")
                         self.run_command(f"gh run view {workflow_id} -w")
-                    return
+                    break
                 elif status == 'cancelled':
                     print("O workflow foi cancelado.")
-                    return
+                    break
                 elif status == 'skipped':
                     print("O workflow foi ignorado.")
-                    return
+                    break
                 elif status == 'pending':
                     print("O workflow está pendente.")
                     print("Aguardando 30 segundos antes de verificar novamente.")
@@ -169,40 +196,42 @@ class GitHubRepo:
                     if show_workflow.lower() == "true":
                         print(f"Exibindo detalhes do workflow: {workflow_id}")
                         self.run_command(f"gh run view {workflow_id} -w")
-                    return
+                    break
                 else:
                     print(f"Status desconhecido: {status}")
-                    return
+                    break
             else:
                 print(f"Workflow '{workflow_name}' não encontrado.")
-                return
+                break
+            
+        os.chdir(self.base_path)
 
     def git_clone(self, org):
         """Realiza o clone do repositorio."""
         print(f"\n Processando repositório: {self.repo_name}")
         print(f"\n------------- Realizando o clone do repositorio -------------")
-        self.cd_repo_path()
+        
         if Path(f"{self.repo_name}").is_dir():
             print("Já existe ou pasta com o mesmo nome nesse diretorio")
         else:
             response1, response2 = self.run_command(f"git clone https://github.com/{org}/{self.repo_name}.git")
-            print("----------------- Clone realizado com sucesso -----------------")
+            print(f"---------------- Clone realizado com sucesso ----------------")
             print(response1, response2)
         
     def replace_file(self, source_path, target_path):
         """Realiza a alteracao de um arquivo dentro do repositorio."""
         print(f"\n-------------- Iniciando a alteracao do arquivo -------------")
-        self.cd_repo_path()
+        
         if source_path.exists() and target_path.exists():
             shutil.copyfile(source_path, target_path)
-            print(f"-------------- O arquivo foi alterado com sucesso -------------")
+            print(f"------------- O arquivo foi alterado com sucesso ------------")
         else:
-            print(f"-------------- Um ou ambos os arquivos não existem ------------")
+            print(f"------------- Um ou ambos os arquivos não existem -----------")
 
     def replace_dir(self, source_path, target_path):
         """Realiza a alteracao de um arquivo dentro do repositorio."""
         print(f"\n------------- Iniciando a alteracao dos arquivos ------------")
-        self.cd_repo_path()
+        target_path = Path(self.repo_path) / target_path
         if source_path.is_dir() and target_path.is_dir():
             shutil.copytree(source_path, target_path, dirs_exist_ok=True)
             print(f"------------ Os arquivos foram alterados com sucesso ----------")
@@ -230,3 +259,5 @@ class GitHubRepo:
             print(f" Erro de chave no YAML: {e} ")
         except Exception as e:
             print(f" Erro inesperado: {e} ") 
+
+        os.chdir(self.base_path)

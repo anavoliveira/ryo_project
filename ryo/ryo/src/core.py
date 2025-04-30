@@ -13,8 +13,9 @@ def commit_file(step: dict, repo: GitHubRepo):
     file_path = step.get("file_path", "README.md") 
     commit_msg = step.get("commit_msg", "Update README.md") 
     auto_commit = step.get("auto_commit", "false")
+    branch = step.get("branch", "")
     
-    repo.commit(commit_file=file_path, commit_message=commit_msg, auto_commit=auto_commit)
+    repo.commit(commit_file=file_path, commit_message=commit_msg, auto_commit=auto_commit, branch=branch)
  
 
 def approve_pull_request(step: dict, repo: GitHubRepo):
@@ -72,7 +73,7 @@ def replace_dir(step: dict, repo: GitHubRepo):
         step (dict): The step configuration containing workflow name.
     """
     source_path = Path(step.get("source_path"))
-    target_path = Path(step.get("target_path"))
+    target_path = Path(step.get("target_path", ""))
     
     repo.replace_dir(source_path=source_path, target_path=target_path)
 
