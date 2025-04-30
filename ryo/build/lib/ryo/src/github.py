@@ -1,7 +1,9 @@
 import os
 import subprocess
 import time
-
+from pathlib import Path
+import shutil
+import yaml
 class GitHubRepo:
     def __init__(self, repo_path,  base_path):
         self.repo_path = os.path.abspath(os.path.join(base_path, repo_path))
@@ -22,7 +24,7 @@ class GitHubRepo:
             return True
         except FileNotFoundError:
             print("Repositório não encontrado.")
-            return
+            return None
     
     def run_command(self, command):
         """Executa um comando no shell e retorna a saída."""
@@ -120,7 +122,7 @@ class GitHubRepo:
         self.cd_repo_path()
 
         print(f"Monitorando o workflow: {workflow_name}")
-        # time.sleep(30)  
+        time.sleep(30)  
 
         if show_workflow.lower() == "true":
             print(f"Exibindo detalhes do workflow: {workflow_name}")
@@ -175,3 +177,56 @@ class GitHubRepo:
                 print(f"Workflow '{workflow_name}' não encontrado.")
                 return
 
+    def git_clone(self, org):
+        """Realiza o clone do repositorio."""
+        print(f"\n Processando repositório: {self.repo_name}")
+        print(f"\n------------- Realizando o clone do repositorio -------------")
+        self.cd_repo_path()
+        if Path(f"{self.repo_name}").is_dir():
+            print("Já existe ou pasta com o mesmo nome nesse diretorio")
+        else:
+            response1, response2 = self.run_command(f"git clone https://github.com/{org}/{self.repo_name}.git")
+            print("----------------- Clone realizado com sucesso -----------------")
+            print(response1, response2)
+        
+    def replace_file(self, source_path, target_path):
+        """Realiza a alteracao de um arquivo dentro do repositorio."""
+        print(f"\n-------------- Iniciando a alteracao do arquivo -------------")
+        self.cd_repo_path()
+        if source_path.exists() and target_path.exists():
+            shutil.copyfile(source_path, target_path)
+            print(f"-------------- O arquivo foi alterado com sucesso -------------")
+        else:
+            print(f"-------------- Um ou ambos os arquivos não existem ------------")
+
+    def replace_dir(self, source_path, target_path):
+        """Realiza a alteracao de um arquivo dentro do repositorio."""
+        print(f"\n------------- Iniciando a alteracao dos arquivos ------------")
+        self.cd_repo_path()
+        if source_path.is_dir() and target_path.is_dir():
+            shutil.copytree(source_path, target_path, dirs_exist_ok=True)
+            print(f"------------ Os arquivos foram alterados com sucesso ----------")
+        else:
+            print(f"--------------- Uma ou ambas as pastas não existem ------------")
+
+    def destroy(self, file_path, value):
+        """Realiza a alteracao do parametro destroy para deletar os recursos."""
+        print(f"\n-------- Iniciando a alteracao do parametro destroy ---------")
+        self.cd_repo_path()
+        try:
+            with open(file_path, 'r') as f:
+                config = yaml.safe_load(f)
+
+            config['terraform']['destroy'] = str(value)
+
+            with open(file_path, 'w') as f:
+                yaml.dump(config, f, default_flow_style=False)
+                print(f"--------------- Alteração realizada com sucesso ---------------")
+        except FileNotFoundError:
+            print(f" Arquivo '{file_path}' não encontrado ")
+        except yaml.YAMLError as e:
+            print(f" Erro ao ler o YAML: {e} ")
+        except KeyError as e:
+            print(f" Erro de chave no YAML: {e} ")
+        except Exception as e:
+            print(f" Erro inesperado: {e} ") 

@@ -1,7 +1,7 @@
 import yaml
 import os
 import argparse
-from ryo.src.utils import get_task, convert_paths_in_config_file
+from ryo.src.utils import get_task
 from ryo.src.runner import run_steps
 
 def main():
@@ -25,16 +25,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# import argparse
-
-# def main():
-#     parser = argparse.ArgumentParser(description='Uma ferramenta de linha de comando Ryo.')
-#     parser.add_argument('--version', action='version', version='%(prog)s 0.1.0')
-#     # Adicione outros argumentos conforme necessário
-#     args = parser.parse_args()
-#     print("Olá do Ryo!")
-
-# if __name__ == '__main__':
-#     main()

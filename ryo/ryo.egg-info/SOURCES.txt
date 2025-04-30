@@ -1,5 +1,4 @@
 LICENSE
-README.md
 setup.py
 ryo/__init__.py
 ryo.egg-info/PKG-INFO
@@ -14,3 +13,8 @@ ryo/src/core.py
 ryo/src/github.py
 ryo/src/runner.py
 ryo/src/utils.py
+tests/__init__.py
+tests/test_core.py
+tests/test_github.py
+tests/test_runner.py
+tests/test_utils.py

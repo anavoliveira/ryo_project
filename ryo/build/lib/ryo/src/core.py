@@ -1,5 +1,6 @@
 import os
 from ryo.src.github import GitHubRepo
+from pathlib import Path
 
 
 def commit_file(step: dict, repo: GitHubRepo):
@@ -39,5 +40,52 @@ def workflow_monitor(step: dict, repo: GitHubRepo):
     show_workflow = step.get("show_workflow", "false").lower()
     
     repo.workflow_monitor(workflow_name=workflow_name, show_workflow=show_workflow)
+
+def git_clone(step: dict, repo: GitHubRepo):
+    """
+    Git Clone
+    
+    Args:
+        step (dict): The step configuration containing workflow name.
+    """
+    org = step.get("org").lower()
+    
+    repo.git_clone(org=org)
+
+def replace_file(step: dict, repo: GitHubRepo):
+    """
+    Realiza o replace de um arquivo
+    
+    Args:
+        step (dict): The step configuration containing workflow name.
+    """
+    source_path = Path(step.get("source_path"))
+    target_path = Path(step.get("target_path"))
+    
+    repo.replace_file(source_path=source_path, target_path=target_path)
+
+def replace_dir(step: dict, repo: GitHubRepo):
+    """
+    Realiza o replace de uma pasta
+    
+    Args:
+        step (dict): The step configuration containing workflow name.
+    """
+    source_path = Path(step.get("source_path"))
+    target_path = Path(step.get("target_path"))
+    
+    repo.replace_dir(source_path=source_path, target_path=target_path)
+
+def destroy(step: dict, repo: GitHubRepo):
+    """
+    Realiza o replace de uma pasta
+    
+    Args:
+        step (dict): The step configuration containing workflow name.
+    """
+    file_path = Path(step.get("file_path"))
+    value = Path(step.get("value"))
+    
+    repo.destroy(file_path=file_path, value=value)
 
 
